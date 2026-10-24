@@ -1,7 +1,7 @@
 package com.bignat.viktus;
 
 public enum Unit {
-    PIECE(""),
+    PIECE("pcs"),
     GRAM("g"),
     KILOGRAM("kg"),
     MILLILITER("ml"),

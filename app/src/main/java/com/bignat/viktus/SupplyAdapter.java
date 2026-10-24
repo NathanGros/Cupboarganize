@@ -20,6 +20,16 @@ public class SupplyAdapter extends RecyclerView.Adapter<SupplyAdapter.ViewHolder
     private final List<Supply> supplies;
     private final Mode mode;
 
+    public interface OnItemClickListener {
+        void onItemClick(Supply supply, int position);
+    }
+
+    private OnItemClickListener clickListener;
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.clickListener = listener;
+    }
+
     public SupplyAdapter(List<Supply> supplies, Mode mode) {
         this.supplies = supplies;
         this.mode = mode;
@@ -70,6 +80,13 @@ public class SupplyAdapter extends RecyclerView.Adapter<SupplyAdapter.ViewHolder
             holder.checkBox.setChecked(s.checked);
             holder.checkBox.setOnCheckedChangeListener((btn, isChecked) -> s.checked = isChecked);
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            int pos = holder.getAdapterPosition();
+            if (clickListener != null && pos != RecyclerView.NO_POSITION) {
+                clickListener.onItemClick(supplies.get(pos), pos);
+            }
+        });
     }
 
     @Override
@@ -93,5 +110,18 @@ public class SupplyAdapter extends RecyclerView.Adapter<SupplyAdapter.ViewHolder
     public void addSupply(Supply supply) {
         supplies.add(supply);
         notifyItemInserted(supplies.size() - 1);
+    }
+
+    public void updateSupply(int position, String name, double quantity, Unit unit) {
+        Supply s = supplies.get(position);
+        s.name = name;
+        s.quantity = quantity;
+        s.unit = unit;
+        notifyItemChanged(position);
+    }
+
+    public void removeSupply(int position) {
+        supplies.remove(position);
+        notifyItemRemoved(position);
     }
 }

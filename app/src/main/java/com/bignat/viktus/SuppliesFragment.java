@@ -61,28 +61,32 @@ public class SuppliesFragment extends Fragment {
                 });
         helper.attachToRecyclerView(list);
 
-        FloatingActionButton fab = view.findViewById(R.id.fab_add_supply);
-        fab.setOnClickListener(v -> showAddSupplyDialog());
-    }
+        // Single listener for add, edit and delete
+        getChildFragmentManager().setFragmentResultListener(
+                SupplyDialog.RESULT_KEY, getViewLifecycleOwner(), (key, result) -> {
+                    int position = result.getInt(SupplyDialog.KEY_POSITION);
 
-    private void showAddSupplyDialog() {
-        EditText input = new EditText(requireContext());
-        input.setHint("Supply name");
-        input.setSingleLine(true);
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Add supply")
-                .setView(input)
-                .setPositiveButton("Add", (dialog, which) -> {
-                    String name = input.getText().toString().trim();
-                    double quantity = 1;
-                    Unit unit = Unit.PIECE;
-                    Supply supply = new Supply(name, quantity, unit, false);
-                    if (!name.isEmpty()) {
-                        adapter.addSupply(supply);
+                    if (result.getBoolean(SupplyDialog.KEY_DELETED)) {
+                        adapter.removeSupply(position);
+                        return;
                     }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+
+                    String name = result.getString(SupplyDialog.KEY_NAME);
+                    double quantity = result.getDouble(SupplyDialog.KEY_QUANTITY);
+                    Unit unit = Unit.values()[result.getInt(SupplyDialog.KEY_UNIT)];
+
+                    if (position == SupplyDialog.NEW_ITEM) {
+                        adapter.addSupply(new Supply(name, quantity, unit, false));
+                    } else {
+                        adapter.updateSupply(position, name, quantity, unit);
+                    }
+                });
+
+        view.findViewById(R.id.fab_add_supply).setOnClickListener(v ->
+                SupplyDialog.newAdd().show(getChildFragmentManager(), "supply_dialog"));
+
+        adapter.setOnItemClickListener((supply, position) ->
+                SupplyDialog.newEdit(position, supply)
+                        .show(getChildFragmentManager(), "supply_dialog"));
     }
 }
